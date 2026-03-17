@@ -25,11 +25,11 @@ PORT = int(os.environ.get("PORT", "8000"))
 def _get_headers():
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if POSTIZ_API_KEY:
-        headers["Authorization"] = f"Bearer {POSTIZ_API_KEY}"
+        headers["Authorization"] = POSTIZ_API_KEY
     return headers
 
 async def _api_request(method: str, path: str, data: dict = None, params: dict = None) -> dict:
-    url = f"{POSTIZ_URL}/api{path}" if not path.startswith("http") else path
+    url = f"{POSTIZ_URL}/public/v1{path}" if not path.startswith("http") else path
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             if method == "GET":
@@ -347,7 +347,7 @@ async def postiz_status() -> str:
     """
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{POSTIZ_URL}/api/integrations", headers=_get_headers())
+            resp = await client.get(f"{POSTIZ_URL}/public/v1/integrations", headers=_get_headers())
             if resp.status_code == 200:
                 integrations = resp.json()
                 count = len(integrations) if isinstance(integrations, list) else 0

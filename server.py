@@ -29,7 +29,7 @@ def _get_headers():
     return headers
 
 async def _api_request(method: str, path: str, data: dict = None, params: dict = None) -> dict:
-    url = f"{POSTIZ_URL}/api/v1{path}" if not path.startswith("http") else path
+    url = f"{POSTIZ_URL}/api{path}" if not path.startswith("http") else path
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             if method == "GET":
@@ -347,7 +347,7 @@ async def postiz_status() -> str:
     """
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{POSTIZ_URL}/api/v1/integrations", headers=_get_headers())
+            resp = await client.get(f"{POSTIZ_URL}/api/integrations", headers=_get_headers())
             if resp.status_code == 200:
                 integrations = resp.json()
                 count = len(integrations) if isinstance(integrations, list) else 0

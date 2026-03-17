@@ -69,7 +69,7 @@ def _format_response(data: dict) -> str:
     return json.dumps(data, indent=2, default=str)
 
 # ── MCP Server ──
-mcp = FastMCP("postiz_mcp")
+mcp = FastMCP("postiz_mcp", host="0.0.0.0", port=PORT)
 
 # ═══════════════════════════════════════════════════════════
 # Tool: List connected social media integrations
@@ -375,4 +375,4 @@ async def postiz_status() -> str:
 if __name__ == "__main__":
     logger.info(f"Starting Postiz MCP Server on port {PORT}")
     logger.info(f"Postiz URL: {POSTIZ_URL}")
-    mcp.run(transport="sse", port=PORT)
+    mcp.run(transport="sse")

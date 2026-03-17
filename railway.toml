@@ -3,7 +3,6 @@ builder = "dockerfile"
 
 [deploy]
 startCommand = "python server.py"
-healthcheckPath = "/sse"
-healthcheckTimeout = 30
+healthcheckTimeout = 60
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3

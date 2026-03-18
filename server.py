@@ -114,15 +114,15 @@ class CreatePostInput(BaseModel):
     )
     schedule_date: str = Field(
         ...,
-        description="ISO 8601 datetime for when to publish. Example: '2026-03-17T12:00:00-05:00' for noon CT."
+        description="ISO 8601 datetime for when to publish. Example: '2026-03-17T17:00:00.000Z' (UTC)."
     )
-    image_url: Optional[str] = Field(
-        default=None,
-        description="URL of an image to attach. Use OpenAI Image Gen MCP URLs or any public image URL."
-    )
-    type: Optional[str] = Field(
+    post_type: Optional[str] = Field(
         default="post",
-        description="Post type: 'post', 'reel', 'story', or 'carousel'"
+        description="Post type: 'post' or 'story'. Default: 'post'."
+    )
+    publish_mode: Optional[str] = Field(
+        default="schedule",
+        description="Publish mode: 'schedule' (at date), 'now' (immediately), or 'draft'. Default: 'schedule'."
     )
 
 @mcp.tool(
@@ -146,15 +146,24 @@ async def postiz_create_post(params: CreatePostInput) -> str:
     2. Generate image via OpenAI Image Gen MCP if needed
     3. Call this tool with content, integration_id, schedule_date, and image_url
     """
-    payload = {
-        "content": [{"content": params.content}],
-        "integration": params.integration_id,
-        "date": params.schedule_date,
-        "type": params.type or "post",
-    }
+    value_item = {"content": params.content, "image": []}
 
-    if params.image_url:
-        payload["media"] = [{"url": params.image_url}]
+    payload = {
+        "type": params.publish_mode or "schedule",
+        "shortLink": False,
+        "date": params.schedule_date,
+        "tags": [],
+        "posts": [
+            {
+                "integration": {"id": params.integration_id},
+                "value": [value_item],
+                "settings": {
+                    "__type": "instagram-standalone",
+                    "post_type": params.post_type or "post",
+                },
+            }
+        ],
+    }
 
     result = await _api_request("POST", "/posts", data=payload)
     return _format_response(result)

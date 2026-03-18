@@ -147,8 +147,8 @@ async def postiz_create_post(params: CreatePostInput) -> str:
     3. Call this tool with content, integration_id, schedule_date, and image_url
     """
     payload = {
-        "content": params.content,
-        "integrationId": params.integration_id,
+        "content": [{"content": params.content}],
+        "integration": params.integration_id,
         "date": params.schedule_date,
         "type": params.type or "post",
     }

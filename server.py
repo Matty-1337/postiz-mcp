@@ -5,7 +5,7 @@ Wraps the Postiz REST API deployed at Railway.
 import os
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from enum import Enum
 
@@ -29,7 +29,7 @@ def _get_headers():
     return headers
 
 async def _api_request(method: str, path: str, data: dict = None, params: dict = None) -> dict:
-    url = f"{POSTIZ_URL}/public/v1{path}" if not path.startswith("http") else path
+    url = f"{POSTIZ_URL}/api/public/v1{path}" if not path.startswith("http") else path
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             if method == "GET":
@@ -168,6 +168,14 @@ class ListPostsInput(BaseModel):
     """Input for listing posts."""
     model_config = ConfigDict(str_strip_whitespace=True)
 
+    start_date: Optional[str] = Field(
+        default=None,
+        description="Start date in ISO 8601 format. Defaults to 90 days ago. Example: '2026-01-01T00:00:00Z'"
+    )
+    end_date: Optional[str] = Field(
+        default=None,
+        description="End date in ISO 8601 format. Defaults to 90 days from now. Example: '2026-12-31T23:59:59Z'"
+    )
     status: Optional[str] = Field(
         default=None,
         description="Filter by status: 'draft', 'scheduled', 'published', 'error'. Leave empty for all."
@@ -194,7 +202,11 @@ async def postiz_list_posts(params: ListPostsInput) -> str:
     and platform. Use to check what's queued, what's been published,
     and identify gaps in the content calendar.
     """
-    query_params = {}
+    now = datetime.now(timezone.utc)
+    start = params.start_date or (now - timedelta(days=90)).isoformat()
+    end = params.end_date or (now + timedelta(days=90)).isoformat()
+
+    query_params = {"startDate": start, "endDate": end}
     if params.status:
         query_params["status"] = params.status
     if params.limit:
@@ -347,7 +359,7 @@ async def postiz_status() -> str:
     """
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{POSTIZ_URL}/public/v1/integrations", headers=_get_headers())
+            resp = await client.get(f"{POSTIZ_URL}/api/public/v1/integrations", headers=_get_headers())
             if resp.status_code == 200:
                 integrations = resp.json()
                 count = len(integrations) if isinstance(integrations, list) else 0

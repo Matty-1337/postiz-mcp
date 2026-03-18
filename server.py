@@ -148,7 +148,7 @@ async def postiz_create_post(params: CreatePostInput) -> str:
     """
     payload = {
         "content": params.content,
-        "integration": {"id": params.integration_id},
+        "integrationId": params.integration_id,
         "date": params.schedule_date,
         "type": params.type or "post",
     }
